@@ -1,0 +1,349 @@
+generator client {
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// ══════════════════════════════════════════════════════════
+// IDENTITY GROUP — who is using the system
+// ══════════════════════════════════════════════════════════
+
+// backend/prisma/schema.prisma
+// Only the Citizen model changes — add 4 new fields
+
+model Citizen {
+  id              String    @id @default(uuid())
+  name            String    @db.VarChar(100)
+  mobile          String    @unique @db.VarChar(15)
+  aadhaarHash     String?   @db.VarChar(64)
+  aadhaarDocUrl   String?
+
+  // NEW FIELDS
+  dateOfBirth     DateTime? @db.Date
+  address         String?
+  email           String?   @db.VarChar(150)
+  gender          Gender?
+
+  isVerified      Boolean   @default(false)
+  preferredLang   String    @default("en") @db.VarChar(5)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  sessions              Session[]
+  serviceAccounts       ServiceAccount[]
+  transactions          Transaction[]
+  complaints            Complaint[]
+  connectionRequests    NewConnectionRequest[]
+  kioskLogs             KioskLog[]
+
+  @@map("citizens")
+}
+
+// Add this new enum alongside existing enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+model Session {
+    id   String  @id @default(uuid())
+
+    citizenId  String
+    citizen    Citizen @relation(fields: [citizenId], references: [id])
+
+    // The JWT token string — indexed for fast lookup on every request
+  token     String   @unique
+
+  expiresAt   DateTime
+  
+  kioskId     String @db.VarChar(20)
+
+  createdAt   DateTime @default(now())
+
+  kioskLogs   KioskLog[]
+
+  @@map("sessions")
+  @@index([token])          // fast token lookup on every request
+  @@index([citizenId])      // fast lookup of sessions for a citizen
+}
+
+
+model Admin {
+      id           String   @id @default(uuid())
+    
+    username     String   @unique @db.VarChar(50)
+
+    passwordHash String   @db.VarChar(100)
+
+    role         AdminRole
+
+    lastLoginAt  DateTime?
+
+    createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+enum AdminRole {
+    SUPER_ADMIN
+    OPERATOR
+    VIEWER
+}
+
+model ServiceAccount {
+    id           String          @id @default(uuid())
+
+    // Who owns this utility account
+  citizenId    String
+  citizen      Citizen         @relation(fields: [citizenId], references: [id])
+
+  serviceType  ServiceType
+
+
+  // Consumer number printed on the utility bill (e.g. "7845-321-09")
+  // Unique per service type to prevent duplicate accounts
+  accountNo    String          @db.VarChar(30)
+
+  // e.g. "TSSPDCL", "Hyderabad Gas" — varies by city
+  providerName String          @db.VarChar(100)
+
+    // Service address — may differ from citizen's home address
+  address      String
+
+  // Soft delete — deactivate without losing payment history
+  isActive     Boolean         @default(true)
+
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  bills        Bill[]
+
+  @@unique([serviceType,accountNo])
+  @@index([citizenId])
+  @@index([serviceType])
+  @@map("service_accounts")
+
+}
+
+
+enum ServiceType {
+  ELECTRICITY
+  GAS
+  WATER
+}
+
+
+model Bill {
+    id    String  @id @default(uuid())
+
+    accountId    String
+    account      ServiceAccount  @relation(fields: [accountId],references:[id])
+
+    billNo   String   @db.VarChar(30)
+
+    amount   Decimal  @db.Decimal(10,2)
+
+    dueDate  DateTime   @db.Date
+
+    period      String      @db.VarChar(20)
+
+    unitsConsumed   Decimal?   @db.Decimal(10,2)
+
+    status    BillStatus     @default(PENDING)
+
+    generatedAt DateTime    @default(now())
+
+    transactions Transaction[]
+
+    @@index([accountId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("bills")
+}
+
+enum BillStatus {
+  PENDING
+  PAID
+  OVERDUE
+  PARTIALLY_PAID
+}
+
+
+// ══════════════════════════════════════════════════════════
+// FINANCIAL GROUP — the audit trail of all money
+// ══════════════════════════════════════════════════════════
+
+model Transaction {
+    id    String    @id  @default(uuid())
+
+    // Which bill was being paid — nullable for standalone payments (property tax)
+  billId            String?
+  bill              Bill?             @relation(fields: [billId], references: [id])
+
+  // Who made the payment — denormalized for fast admin queries
+  citizenId         String
+  citizen           Citizen           @relation(fields: [citizenId], references: [id])
+
+    razorpayOrderId   String?           @db.VarChar(50)
+
+    razorpayPaymentId String?           @db.VarChar(50)
+
+    amount            Decimal           @db.Decimal(10, 2)
+
+    status            TransactionStatus @default(INITIATED)
+
+    paymentMethod     String?           @db.VarChar(20)
+
+    receiptUrl        String?
+
+    createdAt    DateTime  @default(now())
+
+    @@index([citizenId])
+    @@index([billId])
+    @@index([status])
+    @@index([razorpayOrderId])
+    @@index([createdAt])               // range queries for admin reports
+    @@map("transactions")
+
+}
+
+enum TransactionStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+// ══════════════════════════════════════════════════════════
+// OPERATIONAL GROUP — grievances, requests, logs
+// ══════════════════════════════════════════════════════════
+
+
+model Complaint {
+    id          String      @id @default(uuid())
+
+    citizenId  String?
+    citizen    Citizen?   @relation(fields: [citizenId], references: [id])
+
+    serviceType   String   @db.VarChar(20)
+
+    category      String   @db.VarChar(50)
+
+    description     String
+
+    docUrl          String?
+
+    status          ComplaintStatus  @default(SUBMITTED)
+
+    assignedTo      String?         @db.VarChar(50)
+
+    resolutionNote      String?
+
+    refNo       String      @unique
+
+    createdAt       DateTime    @default(now())
+
+    resolvedAt     DateTime?
+
+  @@index([citizenId])
+  @@index([status])
+  @@index([serviceType])
+  @@index([createdAt])
+  @@map("complaints")
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model NewConnectionRequest {
+  id          String            @id @default(uuid())
+
+  // Who submitted the request
+  citizenId   String
+  citizen     Citizen           @relation(fields: [citizenId], references: [id])
+
+  // ELECTRICITY | GAS | WATER
+  serviceType ServiceType
+
+  // Address where new connection is required
+  address     String
+
+  // RESIDENTIAL | COMMERCIAL | INDUSTRIAL — affects connection type
+  propertyType String          @db.VarChar(20)
+
+  // Cloudinary URL of uploaded proof document (Aadhaar / property papers)
+  docUrl      String?
+
+  // SUBMITTED | UNDER_REVIEW | APPROVED | REJECTED
+  status      ConnectionStatus  @default(SUBMITTED)
+
+  // Admin remarks — rejection reason or approval notes
+  remarks     String?
+
+  // Reference number printed on kiosk slip
+  // Format: CONN-2025-00001
+  refNo       String            @unique
+
+  // Submission timestamp — SLA timer starts here
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([citizenId])
+  @@index([status])
+  @@index([serviceType])
+  @@map("new_connection_requests")
+}
+
+enum ConnectionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model KioskLog {
+  id        String   @id @default(uuid())
+
+  // Which physical kiosk machine — KIOSK_001, KIOSK_002, etc.
+  kioskId   String   @db.VarChar(20)
+
+  // Nullable — some actions happen before login (language selection)
+  citizenId String?
+  citizen   Citizen? @relation(fields: [citizenId], references: [id])
+
+  // Which session this action belongs to
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id])
+
+  // e.g. LANGUAGE_SELECTED | BILL_VIEWED | PAYMENT_INITIATED | SESSION_TIMEOUT
+  action    String   @db.VarChar(50)
+
+  // Which module was active — for per-service usage analytics
+  serviceType String? @db.VarChar(20)
+
+  // Flexible extra data stored as JSON
+  // e.g. {"lang":"te","screen":"electricity_home","amount":1847}
+  metadata  Json     @default("{}")
+
+  // Timestamp — primary index for time-range queries in admin dashboard
+  createdAt DateTime @default(now())
+
+  @@index([kioskId])
+  @@index([citizenId])
+  @@index([action])
+  @@index([createdAt])        // admin analytics range queries
+  @@map("kiosk_logs")
+}

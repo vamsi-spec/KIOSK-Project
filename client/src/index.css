@@ -1,0 +1,62 @@
+/* Import Tailwind's base, component, and utility layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Global kiosk-first defaults ───────────────────────── */
+@layer base {
+  html {
+    /* 18px minimum body font — kiosk readability requirement */
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+    /* Prevent rubber-band scrolling on touch screens */
+    overscroll-behavior: none;
+  }
+
+  /* All buttons meet the 60px minimum touch target */
+  button {
+    min-height: 60px;
+    cursor: pointer;
+  }
+
+  /* Inputs large enough for touch */
+  input, select, textarea {
+    font-size: 1rem;
+    min-height: 56px;
+  }
+}
+
+/* ── Kiosk utility classes ──────────────────────────────── */
+@layer components {
+  /* Full-screen kiosk container */
+  .kiosk-screen {
+    @apply min-h-screen flex flex-col bg-white;
+  }
+
+  /* Large primary action button */
+  .btn-kiosk-primary {
+    @apply w-full min-h-[60px] px-6 py-4 text-xl font-semibold
+           rounded-xl text-white bg-brand-blue
+           active:scale-95 transition-transform;
+  }
+
+  /* Large secondary/outline button */
+  .btn-kiosk-secondary {
+    @apply w-full min-h-[60px] px-6 py-4 text-xl font-semibold
+           rounded-xl text-brand-blue border-2 border-brand-blue
+           active:scale-95 transition-transform;
+  }
+
+  /* Service tile on the home screen */
+  .service-tile {
+    @apply flex flex-col items-center justify-center
+           p-6 rounded-2xl border-2 border-gray-200
+           min-h-[160px] gap-3 active:scale-95
+           transition-transform cursor-pointer;
+  }
+}

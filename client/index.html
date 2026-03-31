@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SUVIDHA — Smart Urban Virtual Interactive Digital Helpdesk Assistant" />
+
+    <!-- Prevent browser from suggesting saved passwords on kiosk -->
+    <meta name="autocomplete" content="off" />
+
+    <!-- Kiosk: prevent pull-to-refresh and text selection -->
+    <style>
+      html { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+      input, textarea { -webkit-user-select: auto; user-select: auto; }
+    </style>
+
+    <title>SUVIDHA — Civic Services Kiosk</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

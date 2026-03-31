@@ -1,0 +1,23 @@
+{
+  "name": "suvidha-backend",
+  "version": "1.0.0",
+  "description": "SUVIDHA backend monorepo — shared Prisma schema and migrations",
+  "type": "module",
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset --force",
+    "db:generate": "prisma generate",
+    "db:seed": "node prisma/seed.js",
+    "db:studio": "prisma studio",
+    "db:push": "prisma db push"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.1",
+    "bcryptjs": "^3.0.3",
+    "prisma": "^5.16.1"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma",
+    "seed": "node prisma/seed.js"
+  }
+}

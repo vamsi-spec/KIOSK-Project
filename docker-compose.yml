@@ -1,0 +1,120 @@
+
+services:
+
+  # ── PostgreSQL database ─────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: suvidha_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: suvidha
+      POSTGRES_PASSWORD: suvidha123
+      POSTGRES_DB: suvidha_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U suvidha -d suvidha_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (for OTP storage in Phase 3) ──────
+  redis:
+    image: redis:7-alpine
+    container_name: suvidha_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Auth Service ─────────────────────────────
+  auth-service:
+    build:
+      context: ./server
+      dockerfile: auth-service/Dockerfile
+    container_name: suvidha_auth
+    restart: unless-stopped
+    env_file:
+      - ./server/auth-service/.env
+    environment:
+      DATABASE_URL: postgresql://suvidha:suvidha123@postgres:5432/suvidha_db
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Core Service ─────────────────────────────
+  core-service:
+    build:
+      context: ./server
+      dockerfile: core-service/Dockerfile
+    container_name: suvidha_core
+    restart: unless-stopped
+    env_file:
+      - ./server/core-service/.env
+    environment:
+      DATABASE_URL: postgresql://suvidha:suvidha123@postgres:5432/suvidha_db
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Admin Service ────────────────────────────
+  admin-service:
+    build:
+      context: ./server
+      dockerfile: admin-service/Dockerfile
+    container_name: suvidha_admin
+    restart: unless-stopped
+    env_file:
+      - ./server/admin-service/.env
+    environment:
+      DATABASE_URL: postgresql://suvidha:suvidha123@postgres:5432/suvidha_db
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Nginx API Gateway ────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: suvidha_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - core-service
+      - admin-service
+
+volumes:
+  postgres_data:
