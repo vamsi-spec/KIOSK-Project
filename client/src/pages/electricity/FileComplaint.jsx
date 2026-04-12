@@ -24,6 +24,7 @@ export default function FileComplaint() {
     const [errors, setErrors] = useState({})
     const [loading, setLoading] = useState(false)
     const [result, setResult] = useState(null)
+    const [needsLinkedAccount, setNeedsLinkedAccount] = useState(false)
 
     const set = (k, v) => {
         setForm(p => ({ ...p, [k]: v }))
@@ -47,6 +48,7 @@ export default function FileComplaint() {
     const handleSubmit = async () => {
         if (!validate()) return
         setLoading(true)
+        setNeedsLinkedAccount(false)
         try {
             const { data } = await api.post('/core/electricity/complaints', {
                 category: form.category,
@@ -54,7 +56,13 @@ export default function FileComplaint() {
             })
             setResult(data)
         } catch (err) {
-            setErrors({ submit: t('error_generic') })
+            const code = err?.response?.data?.code
+            if (code === 'NO_LINKED_ACCOUNT') {
+                setErrors({ submit: t('no_linked_accounts') })
+                setNeedsLinkedAccount(true)
+            } else {
+                setErrors({ submit: t('error_generic') })
+            }
         } finally {
             setLoading(false)
         }
@@ -148,6 +156,15 @@ export default function FileComplaint() {
                 </div>
 
                 {errors.submit && <p className="text-red-500 text-base text-center">{errors.submit}</p>}
+
+                {needsLinkedAccount && (
+                    <button
+                        onClick={() => navigate('/electricity/link-account')}
+                        className="btn-kiosk-secondary w-full"
+                    >
+                        {t('link_account')}
+                    </button>
+                )}
 
                 <div className="mt-auto">
                     <button onClick={handleSubmit} disabled={loading}
