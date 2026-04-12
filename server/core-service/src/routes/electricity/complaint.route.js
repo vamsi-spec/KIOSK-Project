@@ -40,6 +40,23 @@ complaintRouter.post(
   async (req, res, next) => {
     try {
       const { category, description, docUrl } = req.body
+
+      const linkedAccount = await prisma.serviceAccount.findFirst({
+        where: {
+          citizenId:   req.citizen.id,
+          serviceType: 'ELECTRICITY',
+          isActive:    true
+        },
+        select: { id: true }
+      })
+
+      if (!linkedAccount) {
+        return res.status(403).json({
+          error: 'No linked electricity account found. Please link an account first.',
+          code:  'NO_LINKED_ACCOUNT'
+        })
+      }
+
       const refNo = await generateComplaintRefNo()
 
       const complaint = await prisma.complaint.create({
