@@ -76,6 +76,38 @@ async function main() {
   ])
   console.log('  ✓ Created 3 citizens')
 
+  // ── Seed Provider Configs ────────────────────────────────
+  await prisma.providerConfig.createMany({
+    data: [
+      {
+        providerName:        'TSSPDCL',
+        serviceType:         'ELECTRICITY',
+        lateFeeRatePerMonth: 0.0150,
+        lateFeGraceDays:     0,
+        lateFeeCap:          0.50,
+        paymentTimeoutMin:   15
+      },
+      {
+        providerName:        'Hyderabad Gas Ltd',
+        serviceType:         'GAS',
+        lateFeeRatePerMonth: 0.0200,
+        lateFeGraceDays:     5,
+        lateFeeCap:          0.30,
+        paymentTimeoutMin:   15
+      },
+      {
+        providerName:        'HMWSSB',
+        serviceType:         'WATER',
+        lateFeeRatePerMonth: 0.0100,
+        lateFeGraceDays:     7,
+        lateFeeCap:          0.25,
+        paymentTimeoutMin:   15
+      }
+    ],
+    skipDuplicates: true
+  })
+  console.log('  ✓ Created provider configs')
+
   // ── Seed Service Accounts ────────────────────────────────
   const [raviElec, raviGas, raviWater, priyaElec, sureshElec] = await Promise.all([
     prisma.serviceAccount.create({
@@ -84,7 +116,8 @@ async function main() {
         serviceType:  'ELECTRICITY',
         accountNo:    '7845-321-09',
         providerName: 'TSSPDCL',
-        address:      'Flat 4B, Green Valley Apartments, Madhapur, Hyderabad'
+        address:      'Flat 4B, Green Valley Apartments, Madhapur, Hyderabad',
+        registeredMobile: '9876543210'
       }
     }),
     prisma.serviceAccount.create({
@@ -93,7 +126,8 @@ async function main() {
         serviceType:  'GAS',
         accountNo:    'GAS-HYD-44521',
         providerName: 'Hyderabad Gas Ltd',
-        address:      'Flat 4B, Green Valley Apartments, Madhapur, Hyderabad'
+        address:      'Flat 4B, Green Valley Apartments, Madhapur, Hyderabad',
+        registeredMobile: '9876543210'
       }
     }),
     prisma.serviceAccount.create({
@@ -102,7 +136,8 @@ async function main() {
         serviceType:  'WATER',
         accountNo:    'HMWSSB-78234',
         providerName: 'HMWSSB',
-        address:      'Flat 4B, Green Valley Apartments, Madhapur, Hyderabad'
+        address:      'Flat 4B, Green Valley Apartments, Madhapur, Hyderabad',
+        registeredMobile: '9876543210'
       }
     }),
     prisma.serviceAccount.create({
@@ -111,7 +146,8 @@ async function main() {
         serviceType:  'ELECTRICITY',
         accountNo:    '7845-321-77',
         providerName: 'TSSPDCL',
-        address:      '22, Banjara Hills Road No. 12, Hyderabad'
+        address:      '22, Banjara Hills Road No. 12, Hyderabad',
+        registeredMobile: '9876543211'
       }
     }),
     prisma.serviceAccount.create({
@@ -120,7 +156,8 @@ async function main() {
         serviceType:  'ELECTRICITY',
         accountNo:    '7845-900-31',
         providerName: 'TSSPDCL',
-        address:      'Plot 8, KPHB Colony, Kukatpally, Hyderabad'
+        address:      'Plot 8, KPHB Colony, Kukatpally, Hyderabad',
+        registeredMobile: '9876543212'
       }
     })
   ])

@@ -15,7 +15,7 @@ const LANGUAGES = [
 
 
 
-export const LanguageScreen = () => {
+export default function LanguageScreen() {
     const navigate = useNavigate()
     const {i18n,t} = useTranslation()
     const {setLanguage,language} = useStore()
