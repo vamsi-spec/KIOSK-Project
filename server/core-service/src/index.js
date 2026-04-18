@@ -7,6 +7,7 @@ import { healthRouter }          from './healthcheck.js'
 import { electricityRouter }     from './routes/electricity/index.js'
 import { resetTimedOutPayments } from './jobs/paymentTimeout.job.js'
 import { BILLING }               from './constants/billing.js'
+import { gasRouter } from './routes/gas/index.js'
 
 const app        = express()
 const httpServer = createServer(app)
@@ -25,6 +26,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 
 app.use('/health',      healthRouter)
 app.use('/electricity', electricityRouter)
+app.use('/gas',gasRouter)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', service: 'core-service', path: req.path })

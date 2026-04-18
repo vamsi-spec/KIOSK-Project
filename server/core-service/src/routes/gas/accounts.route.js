@@ -1,12 +1,15 @@
-import { enrichBill } from "../../helpers/lateFee"
-import { generateVerificationRefNo } from "../../helpers/refNo"
-import prisma from "../../lib/prisma"
-import redis from "../../lib/redis"
-import { auth } from "../../middleware/auth.middleware"
 
 
 
-
+import { Router } from 'express'
+import { body, validationResult } from 'express-validator'
+import bcrypt from 'bcrypt'
+import prisma from '../../lib/prisma.js'
+import redis from '../../lib/redis.js'
+import { auth } from '../../middleware/auth.middleware.js'
+import { generateVerificationRefNo } from '../../helpers/refNo.js'
+import { enrichBill } from '../../helpers/lateFee.js'
+import { BILLING } from '../../config.js'
 
 export const accountRouter = Router()
 
