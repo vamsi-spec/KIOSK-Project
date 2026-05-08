@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
-import api from '../../lib/api'
+import api from '../../lib/axios'
 import KioskLayout from '../../components/KioskLayout'
 import { motion } from 'framer-motion'
 

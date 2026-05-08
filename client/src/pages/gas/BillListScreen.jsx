@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom'
-import api from '../../lib/api'
+import api from '../../lib/axios'
 import KioskLayout from '../../components/KioskLayout';
 import { BiLeftArrowAlt } from 'react-icons/bi'
 

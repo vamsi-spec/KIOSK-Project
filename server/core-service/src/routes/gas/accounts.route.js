@@ -3,14 +3,15 @@
 
 import { Router } from 'express'
 import { body, validationResult } from 'express-validator'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import prisma from '../../lib/prisma.js'
 import redis from '../../lib/redis.js'
 import { auth } from '../../middleware/auth.middleware.js'
 import { generateVerificationRefNo } from '../../helpers/refNo.js'
 import { enrichBill } from '../../helpers/lateFee.js'
-import { BILLING } from '../../config.js'
+import { BILLING } from '../../constants/billing.js'
 
+import crypto from 'crypto'
 export const accountRouter = Router()
 
 export const GAS_PROVIDERS = [

@@ -3,7 +3,7 @@ import { body, validationResult } from 'express-validator'
 import { generateComplaintRefNo } from '../../helpers/refNo.js'
 import prisma from '../../lib/prisma.js'
 import { auth } from '../../middleware/auth.middleware.js'
-
+import { rateLimit } from 'express-rate-limit'
 
 
 export const complaintRouter = Router()

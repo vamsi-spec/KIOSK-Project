@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { body, param, validationResult } from 'express-validator'
 import { auth } from '../../middleware/auth.middleware.js'
 import prisma from '../../lib/prisma.js'
+import { BILLING } from '../../constants/billing.js'
 
 
 
@@ -41,22 +42,22 @@ meterRouter.post('/submit',auth,[
         const lastVerified = await prisma.meterReading.findFirst({
             where: {accountId,verificationStatus: 'VERIFIED'},orderBy: {submittedAt: 'desc'}
         })
-        const previousReading = lastVerified ? Number(lastVerified.readingValue) : 0
+        const previousReadingValue = lastVerified ? Number(lastVerified.readingValue) : 0
         const currentReading = Number(readingValue)
 
-        if(currentReading < previousReading){
-            return res.status(422).json({error: 'Reading cannot be less than the previous reading ' + previousReading + UNIT_LABEL,code:'READING_TOO_LOW'})
+        if(currentReading < previousReadingValue){
+            return res.status(422).json({error: 'Reading cannot be less than the previous reading ' + previousReadingValue + UNIT_LABEL,code:'READING_TOO_LOW'})
         }
-        if (previousReading > 0 && currentReading > previousReading * 10) {
+        if (previousReadingValue > 0 && currentReading > previousReadingValue * 10) {
         return res.status(422).json({ error: 'Reading seems unusually high. Please double-check your meter.', code: 'READING_SUSPICIOUS' })
       }
 
-      const unitsConsumed = Math.round((currentReading - previousReading)*100)/100
+      const unitsConsumed = Math.round((currentReading - previousReadingValue)*100)/100
 
       const reading = await prisma.meterReading.create({
         data: {
             accountId,citizenId: req.citizen.id,
-            readingValue: currentReading,previousReading,unitsConsumed,photoUrl: photoUrl || null,
+            readingValue: currentReading,previousReadingValue,unitsConsumed,photoUrl: photoUrl || null,
             verificationStatus: 'PENDING'
         }
       })
@@ -72,7 +73,7 @@ meterRouter.post('/submit',auth,[
       res.status(201).json({
         message: 'Gas meter reading submitted. It will be verified by our team.',
         readingId: reading.id, readingValue: currentReading,
-        previousReading, unitsConsumed, unitLabel: UNIT_LABEL,
+        previousReadingValue, unitsConsumed, unitLabel: UNIT_LABEL,
         verificationStatus: 'PENDING', submittedAt: reading.submittedAt
       })
     } catch (err) { next(err) }

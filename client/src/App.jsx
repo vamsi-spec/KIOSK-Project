@@ -20,6 +20,17 @@ import NewConnectionScreen from './pages/electricity/NewConnectionScreen.jsx'
 import FileComplaint from './pages/electricity/FileComplaint.jsx'
 import TrackComplaint from './pages/electricity/TrackComplaint.jsx'
 
+// Gas
+import GasHome from './pages/gas/GasHome.jsx'
+import EmergencyScreen from './pages/gas/EmergencyScreen.jsx'
+import GasAccountsScreen from './pages/gas/AccountsScreen.jsx'
+import GasLinkAccountScreen from './pages/gas/LinkAccountScreen.jsx'
+import GasBillListScreen from './pages/gas/BillListScreen.jsx'
+import GasPayBillScreen from './pages/gas/PayBillScreen.jsx'
+import GasMeterReadingScreen from './pages/gas/MeterReadingScreen.jsx'
+import GasFileComplaint from './pages/gas/FileComplaint.jsx'
+import GasTrackComplaint from './pages/gas/TrackComplaint.jsx'
+import GasNewConnectionScreen from './pages/gas/NewConnectionScreen.jsx'
 const Placeholder = ({ name }) => (
   <div style={{
     display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -56,8 +67,19 @@ export default function App() {
         <Route path="/electricity/complaint" element={<FileComplaint />} />
         <Route path="/electricity/track" element={<TrackComplaint />} />
 
+        {/* Gas */}
+        <Route path="/gas"                  element={<GasHome />} />
+        <Route path="/gas/emergency"        element={<EmergencyScreen />} />
+        <Route path="/gas/accounts"         element={<GasAccountsScreen />} />
+        <Route path="/gas/link-account"     element={<GasLinkAccountScreen />} />
+        <Route path="/gas/bills/:accountId" element={<GasBillListScreen />} />
+        <Route path="/gas/pay"              element={<GasPayBillScreen />} />
+        <Route path="/gas/meter"            element={<GasMeterReadingScreen />} />
+        <Route path="/gas/complaint"        element={<GasFileComplaint />} />
+        <Route path="/gas/track"            element={<GasTrackComplaint />} />
+        <Route path="/gas/connection"       element={<GasNewConnectionScreen />} />
+
         {/* Phase 6+ placeholders */}
-        <Route path="/gas/*" element={<Placeholder name="Gas Services" />} />
         <Route path="/water/*" element={<Placeholder name="Water & Municipal" />} />
         <Route path="/complaints/*" element={<Placeholder name="Complaints" />} />
         <Route path="/receipt" element={<Placeholder name="Receipt" />} />

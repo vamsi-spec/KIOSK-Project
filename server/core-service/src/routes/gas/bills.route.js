@@ -3,7 +3,7 @@ import { auth } from '../../middleware/auth.middleware.js'
 import prisma from '../../lib/prisma.js'
 import { param, validationResult } from 'express-validator'
 import { enrichBill } from '../../helpers/lateFee.js'
-import { BILLING } from '../../config.js'
+import { BILLING } from '../../constants/billing.js'
 
 
 

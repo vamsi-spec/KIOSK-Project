@@ -69,10 +69,13 @@ services:
       - ./server/core-service/.env
     environment:
       DATABASE_URL: postgresql://suvidha:suvidha123@postgres:5432/suvidha_db
+      REDIS_URL: redis://redis:6379
     ports:
       - "3002:3002"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3002/health"]

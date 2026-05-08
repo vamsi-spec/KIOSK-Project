@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma.js"
-
+import { BILLING } from "../constants/billing.js"
 
 
 export const resetTimedOutPayments = async () => {
@@ -46,7 +46,7 @@ export const resetTimedOutPayments = async () => {
       console.log(`[paymentTimeout job] Reset bill ${txn.billId} — transaction ${txn.id}`)
     }
     } catch (error) {
-            console.error('[paymentTimeout job] Error:', err.message)
+            console.error('[paymentTimeout job] Error:', error.message)
 
     }
 }
